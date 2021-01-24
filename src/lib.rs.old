@@ -1,0 +1,218 @@
+use std::{fs::File, io, io::stdin, io::Read, path::PathBuf};
+
+use either::Either;
+
+pub struct Builder {
+    mode: Mode,
+}
+
+impl Builder {
+    pub fn stdin(mut self, key: &'static str, pattern: Pattern) -> Self {
+        match &mut self.mode {
+            Mode::Auto(set) => set.stdin = Rule::new(key, pattern),
+            Mode::Stdin(r) => *r = Rule::new(key, pattern),
+            _ => {}
+        }
+
+        self
+    }
+
+    pub fn file(mut self, key: &'static str, pattern: Pattern) -> Self {
+        match &mut self.mode {
+            Mode::Auto(set) => set.file = Rule::new(key, pattern),
+            Mode::File(r) => *r = Rule::new(key, pattern),
+            _ => {}
+        }
+
+        self
+    }
+
+    pub fn stdin_only(mut self) -> Self {
+        let old = match self.mode {
+            Mode::Auto(set) => Some(set.stdin),
+            Mode::Stdin(r) => Some(r),
+            _ => None,
+        };
+
+        self.mode = Mode::Stdin(old.unwrap_or_else(|| DEFAULT_STDIN));
+
+        self
+    }
+
+    pub fn file_only(mut self) -> Self {
+        let old = match self.mode {
+            Mode::Auto(set) => Some(set.file),
+            Mode::File(r) => Some(r),
+            _ => None,
+        };
+
+        self.mode = Mode::File(old.unwrap_or_else(|| DEFAULT_FILE));
+
+        self
+    }
+
+    pub fn parse(&self, input: impl AsRef<str>) -> Input {
+        let inner = self
+            .mode
+            .input_type(&input)
+            .map(|ty| ValidatedInput::new(ty.get_info(&input), ty))
+            .ok_or_else(|| input.as_ref().to_string());
+
+        Input { inner }
+    }
+}
+
+pub struct Input {
+    inner: Result<ValidatedInput, String>,
+}
+
+pub struct ValidatedInput {
+    data: ReadInfo,
+    marker: InputType,
+}
+
+impl ValidatedInput {
+    fn new(data: ReadInfo, marker: InputType) -> Self {
+        Self { data, marker }
+    }
+}
+
+pub enum ReadInfo {
+    Stdin,
+    File(PathBuf),
+}
+
+impl ReadInfo {
+    fn into_read(&mut self) -> Result<impl Read, io::Error> {
+        match self {
+            Self::Stdin => Ok(Either::Left(stdin())),
+            Self::File(ref path) => File::open(path).map(|file| Either::Right(file)),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InputType {
+    Stdin,
+    File,
+}
+
+impl InputType {
+    pub fn get_info(&self, input: impl AsRef<str>) -> ReadInfo {
+        match self {
+            Self::Stdin => ReadInfo::Stdin,
+            Self::File => ReadInfo::File(input.as_ref().into()),
+        }
+    }
+}
+#[derive(Debug, Clone)]
+enum Mode {
+    Auto(RuleSet),
+    Stdin(Rule),
+    File(Rule),
+}
+
+impl Mode {
+    fn auto() -> Self {
+        Self::Auto(RuleSet::default())
+    }
+
+    fn stdin() -> Self {
+        Self::Stdin(DEFAULT_STDIN)
+    }
+
+    fn file() -> Self {
+        Self::File(DEFAULT_FILE)
+    }
+
+    fn input_type(&self, input: impl AsRef<str>) -> Option<InputType> {
+        match self {
+            Self::Auto(set) => set.input_type(input).into(),
+            Self::Stdin(r) if r.matches(&input) => Some(InputType::Stdin),
+            Self::File(r) if r.matches(&input) => Some(InputType::File),
+            _ => None,
+        }
+    }
+}
+
+impl Default for Mode {
+    fn default() -> Self {
+        Self::auto()
+    }
+}
+
+#[derive(Debug, Clone)]
+struct RuleSet {
+    file: Rule,
+    stdin: Rule,
+}
+
+impl RuleSet {
+    fn input_type(&self, input: impl AsRef<str>) -> Option<InputType> {
+        if self.stdin.matches(&input) {
+            return InputType::Stdin.into();
+        }
+
+        if self.file.matches(&input) {
+            return InputType::File.into();
+        }
+
+        None
+    }
+}
+
+impl Default for RuleSet {
+    fn default() -> Self {
+        Self {
+            file: DEFAULT_FILE,
+            stdin: DEFAULT_STDIN,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Rule {
+    k: &'static str,
+    p: Pattern,
+}
+
+impl Rule {
+    fn new(key: &'static str, p: Pattern) -> Self {
+        Self { k: key, p }
+    }
+
+    fn matches(&self, input: impl AsRef<str>) -> bool {
+        self.p.matches(input, self.k)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Pattern {
+    StartsWith,
+    EndsWith,
+    Contains,
+    Exact,
+}
+
+impl Pattern {
+    fn matches(&self, input: impl AsRef<str>, key: impl AsRef<str>) -> bool {
+        let i = input.as_ref();
+        let k = key.as_ref();
+
+        match self {
+            Self::StartsWith => i.starts_with(k),
+            Self::EndsWith => i.ends_with(k),
+            Self::Contains => i.contains(k),
+            Self::Exact => i == k,
+        }
+    }
+}
+
+const DEFAULT_FILE: Rule = Rule {
+    k: "@",
+    p: Pattern::StartsWith,
+};
+const DEFAULT_STDIN: Rule = Rule {
+    k: "-",
+    p: Pattern::Exact,
+};
