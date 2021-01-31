@@ -1,4 +1,9 @@
-mod error;
+mod builder;
 mod input;
-mod parsers;
 
+pub mod error;
+pub mod parsers;
+
+pub use input::Input;
+
+pub use builder::{Builder, Config};
