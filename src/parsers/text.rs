@@ -28,6 +28,8 @@ impl Text {
     /// Example:
     ///
     /// ```
+    /// use cliutl::parsers::Text;
+    ///
     /// // Require the text to be prefaced with '###'
     /// let Text = Text::new().with(|this| this.marker("###"));
     /// ```
@@ -119,6 +121,87 @@ pub fn default_text_parser<'a, 'b>(
     if marker == "" {
         Ok(("", input.to_string()))
     } else {
-        nom::context("TEXT", nom::map(nom::tag(marker), |s| String::from(s)))(input)
+        nom::context("TEXT", nom::tag(marker))(input).map(|(path, _)| ("", String::from(path)))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const INPUT: &'static str = "some arbitrary text";
+
+    #[test]
+    fn defaults_success() {
+        let input = INPUT;
+        let output = String::from(input);
+
+        let parser = Text::new();
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Ok(InputType::UTF8(output)))
+    }
+
+    #[test]
+    fn c_marker_success() {
+        let mkr = "!!";
+
+        let input = "!!valid text";
+        let output = String::from("valid text");
+
+        let parser = Text::new().with(|this| this.marker(mkr));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Ok(InputType::UTF8(output)))
+    }
+
+    #[test]
+    fn c_marker_failure() {
+        let mkr = "!!";
+
+        let input = "no marker";
+
+        let parser = Text::new().with(|this| this.marker(mkr));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Err(EKind::TEXT.into()))
+    }
+
+    #[test]
+    fn c_parser_success() {
+        let input = INPUT;
+        let output = String::from(input);
+
+        let parser = Text::new().with(|this| this.parser(test_custom_parser));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Ok(InputType::UTF8(output)))
+    }
+
+    #[test]
+    fn c_parser_failure() {
+        let input = "";
+
+        let parser = Text::new().with(|this| this.parser(test_custom_parser));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Err(EKind::TEXT.into()))
+    }
+
+    fn test_custom_parser<'a, 'b>(
+        input: &'a str,
+        marker: &'b str,
+    ) -> nom::IResult<&'a str, String> {
+        use ::nom::error::{make_error, ErrorKind};
+        if input.is_empty() {
+            Err(::nom::Err::Error(make_error(input, ErrorKind::NonEmpty)))
+        } else {
+            nom::context("TEXT", nom::tag(marker))(input).map(|(path, _)| ("", String::from(path)))
+        }
     }
 }
