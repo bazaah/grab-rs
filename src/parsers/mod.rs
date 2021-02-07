@@ -26,7 +26,7 @@ pub(crate) trait Parser {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) enum InputType {
     Stdin,
     File(file::FilePath),
