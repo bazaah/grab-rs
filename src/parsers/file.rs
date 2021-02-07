@@ -6,6 +6,7 @@ use std::{fmt, path::PathBuf};
 
 pub type FileParser = for<'a, 'b> fn(&'a str, &'b str) -> nom::IResult<&'a str, PathBuf>;
 
+/// Parser
 #[derive(Clone, Default)]
 pub struct File {
     marker: Option<String>,
@@ -27,6 +28,8 @@ impl File {
     /// Example:
     ///
     /// ```
+    /// use cliutl::parsers::File;
+    ///
     /// // Use a URI compliant file parser
     /// let file = File::new().with(|this| this.marker("file://"));
     /// ```
@@ -108,7 +111,7 @@ impl fmt::Debug for File {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct FilePath {
     pub path: PathBuf,
 }
@@ -125,5 +128,89 @@ pub fn default_file_parser<'a, 'b>(
     input: &'a str,
     marker: &'b str,
 ) -> nom::IResult<&'a str, PathBuf> {
-    nom::context("FILE", nom::map(nom::tag(marker), |s| PathBuf::from(s)))(input)
+    nom::context("FILE", nom::tag(marker))(input).map(|(path, _)| ("", PathBuf::from(path)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const BAD_INPUT: &'static str = "invalid file input";
+
+    #[test]
+    fn defaults_success() {
+        let input = "@some/file/here";
+        let output = FilePath::new(PathBuf::from("some/file/here"));
+
+        let parser = File::new();
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Ok(InputType::File(output)))
+    }
+
+    #[test]
+    fn defaults_failure() {
+        let input = BAD_INPUT;
+
+        let parser = File::new();
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Err(EKind::FILE.into()))
+    }
+
+    #[test]
+    fn c_marker_success() {
+        let mkr = "+";
+
+        let input = "+/some/file/here";
+        let output = FilePath::new(PathBuf::from("/some/file/here"));
+
+        let parser = File::new().with(|this| this.marker(mkr));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Ok(InputType::File(output)))
+    }
+
+    #[test]
+    fn c_marker_failure() {
+        let mkr = "+";
+
+        let input = BAD_INPUT;
+
+        let parser = File::new().with(|this| this.marker(mkr));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Err(EKind::FILE.into()))
+    }
+
+    #[test]
+    fn c_parser_success() {
+        let input = "file://foo/bar/baz";
+        let output = FilePath::new(PathBuf::from("foo/bar/baz"));
+
+        let parser = File::new().with(|this| this.parser(test_custom_parser));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Ok(InputType::File(output)))
+    }
+
+    #[test]
+    fn c_parser_failure() {
+        let input = "@foo/bar/baz";
+
+        let parser = File::new().with(|this| this.parser(test_custom_parser));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Err(EKind::FILE.into()))
+    }
+
+    fn test_custom_parser<'a, 'b>(input: &'a str, _: &'b str) -> nom::IResult<&'a str, PathBuf> {
+        nom::context("FILE", nom::tag("file://"))(input).map(|(path, _)| ("", PathBuf::from(path)))
+    }
 }
