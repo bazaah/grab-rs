@@ -1,5 +1,5 @@
 [package]
-name = "cliutl"
+name = "grab"
 version = "0.1.0"
 authors = ["Bazaah <github@luxolus.com>"]
 edition = "2018"
