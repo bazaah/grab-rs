@@ -33,6 +33,8 @@ impl Stdin {
     /// Example:
     ///
     /// ```
+    /// use cliutl::parsers::Stdin;
+    ///
     /// // Use a 'curl --data' styled stdin
     /// let stdin = Stdin::new().with(|this| this.marker("@-"));
     /// ```
@@ -119,4 +121,87 @@ pub fn default_stdin_parser<'a, 'b>(input: &'a str, marker: &'b str) -> nom::IRe
     let child = nom::context("STDIN", nom::all_consuming(nom::tag(marker)));
 
     nom::value((), child)(input)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const BAD_INPUT: &'static str = "invalid stdin input";
+
+    #[test]
+    fn defaults_success() {
+        let input = Stdin::DEFAULT_MARKER;
+
+        let parser = Stdin::new();
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Ok(InputType::Stdin))
+    }
+
+    #[test]
+    fn defaults_failure() {
+        let input = BAD_INPUT;
+
+        let parser = Stdin::new();
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Err(EKind::STDIN.into()))
+    }
+
+    #[test]
+    fn c_marker_success() {
+        let mkr = "@-";
+
+        let input = mkr;
+
+        let parser = Stdin::new().with(|this| this.marker(mkr));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Ok(InputType::Stdin))
+    }
+
+    #[test]
+    fn c_marker_failure() {
+        let mkr = "@-";
+
+        let input = BAD_INPUT;
+
+        let parser = Stdin::new().with(|this| this.marker(mkr));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Err(EKind::STDIN.into()))
+    }
+
+    #[test]
+    fn c_parser_success() {
+        let input = "- extra stuff";
+
+        let parser = Stdin::new().with(|this| this.parser(test_custom_parser));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Ok(InputType::Stdin))
+    }
+
+    #[test]
+    fn c_parser_failure() {
+        let input = "extra stuff -";
+
+        let parser = Stdin::new().with(|this| this.parser(test_custom_parser));
+
+        let result = parser.parse_str(input);
+
+        assert_eq!(result, Err(EKind::STDIN.into()))
+    }
+
+    fn test_custom_parser<'a, 'b>(input: &'a str, marker: &'b str) -> nom::IResult<&'a str, ()> {
+        let child = nom::context("STDIN", nom::tag(marker));
+
+        nom::value((), child)(input)
+    }
 }
