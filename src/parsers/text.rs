@@ -30,7 +30,7 @@ impl Text {
     /// Example:
     ///
     /// ```
-    /// use cliutl::parsers::Text;
+    /// use grab::parsers::Text;
     ///
     /// // Require the text to be prefaced with '###'
     /// let Text = Text::new().with(|this| this.marker("###"));

@@ -30,7 +30,7 @@ impl File {
     /// Example:
     ///
     /// ```
-    /// use cliutl::parsers::File;
+    /// use grab::parsers::File;
     ///
     /// // Use a URI compliant file parser
     /// let file = File::new().with(|this| this.marker("file://"));

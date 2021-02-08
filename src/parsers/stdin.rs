@@ -35,7 +35,7 @@ impl Stdin {
     /// Example:
     ///
     /// ```
-    /// use cliutl::parsers::Stdin;
+    /// use grab::parsers::Stdin;
     ///
     /// // Use a 'curl --data' styled stdin
     /// let stdin = Stdin::new().with(|this| this.marker("@-"));
