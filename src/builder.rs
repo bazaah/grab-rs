@@ -1,7 +1,7 @@
 use crate::{
     error::input::InputError,
     input::Input,
-    parsers::{File, InputType, Parser, Stdin, Text},
+    parsers::{File, InputType, Parser, Stdin, Text, Weight, WeightedParser as WP},
 };
 
 use std::{ffi::OsStr, fmt};
@@ -91,14 +91,19 @@ impl Config {
 
     fn internal_parse<F>(&self, mut f: F) -> Result<InputType, InputError>
     where
-        F: FnMut(&dyn Parser) -> Result<InputType, InputError>,
+        F: FnMut(&dyn WP) -> Result<InputType, InputError>,
     {
         let b = &self.inner;
-        let list = [
-            b.file.as_ref().map(|p| p as &dyn Parser),
-            b.stdin.as_ref().map(|p| p as &dyn Parser),
-            b.text.as_ref().map(|p| p as &dyn Parser),
+        let mut list = [
+            b.file.as_ref().map(|p| p as &dyn WP),
+            b.stdin.as_ref().map(|p| p as &dyn WP),
+            b.text.as_ref().map(|p| p as &dyn WP),
         ];
+
+        // Sort parsers by weight, with lower numbers taking
+        // priority.
+        list.sort_by_key(|opt| opt.map(|p| p.weight()));
+
         let mut error: Option<InputError> = None;
 
         for parser in list.iter().filter_map(|o| *o) {
@@ -133,7 +138,7 @@ impl Parser for Config {
 
 impl fmt::Debug for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut dbg = f.debug_struct("Valid");
+        let mut dbg = f.debug_struct("Config");
 
         if let Some(text) = &self.inner.text {
             dbg.field("text", &text);
