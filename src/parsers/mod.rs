@@ -26,6 +26,12 @@ pub(crate) trait Parser {
     }
 }
 
+pub(crate) trait Weight {
+    fn weight(&self) -> u8;
+}
+
+pub(crate) trait WeightedParser: Parser + Weight {}
+
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum InputType {
     Stdin,
