@@ -1,6 +1,6 @@
 use super::{
     nom::{self, Finish},
-    EKind, InputError, InputType, NomError, Parser,
+    EKind, InputError, InputType, NomError, Parser, Weight, WeightedParser,
 };
 
 use std::fmt;
@@ -16,9 +16,11 @@ pub type StdinParser = for<'a, 'b> fn(&'a str, &'b str) -> nom::IResult<&'a str,
 pub struct Stdin {
     marker: Option<String>,
     parser: Option<StdinParser>,
+    weight: Option<u8>,
 }
 
 impl Stdin {
+    pub const DEFAULT_WEIGHT: u8 = 140;
     pub const DEFAULT_MARKER: &'static str = "-";
     pub const DEFAULT_PARSER: StdinParser = default_stdin_parser;
 
@@ -72,6 +74,17 @@ impl Stdin {
         self
     }
 
+    /// Set this parser's weight. Lower numbers will be ran before greater.
+    pub fn weight(&mut self, weight: u8) -> &mut Self {
+        self.weight = Some(weight);
+
+        self
+    }
+
+    fn get_weight(&self) -> u8 {
+        self.weight.unwrap_or(Self::DEFAULT_WEIGHT)
+    }
+
     fn get_marker(&self) -> &str {
         self.marker.as_deref().unwrap_or(Self::DEFAULT_MARKER)
     }
@@ -100,6 +113,14 @@ impl Parser for Stdin {
             .map_err(|e| self.new_error(e))
     }
 }
+
+impl Weight for Stdin {
+    fn weight(&self) -> u8 {
+        self.get_weight()
+    }
+}
+
+impl WeightedParser for Stdin {}
 
 impl fmt::Debug for Stdin {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
