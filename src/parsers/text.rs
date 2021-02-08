@@ -1,6 +1,6 @@
 use super::{
     nom::{self, Finish},
-    EKind, InputError, InputType, NomError, Parser,
+    EKind, InputError, InputType, NomError, Parser, Weight, WeightedParser,
 };
 
 use std::fmt;
@@ -11,9 +11,11 @@ pub type TextParser = for<'a, 'b> fn(&'a str, &'b str) -> nom::IResult<&'a str, 
 pub struct Text {
     marker: Option<String>,
     parser: Option<TextParser>,
+    weight: Option<u8>,
 }
 
 impl Text {
+    pub const DEFAULT_WEIGHT: u8 = 255;
     pub const DEFAULT_MARKER: &'static str = "";
     pub const DEFAULT_PARSER: TextParser = default_text_parser;
 
@@ -67,8 +69,19 @@ impl Text {
         self
     }
 
+    /// Set this parser's weight. Lower numbers will be ran before greater.
+    pub fn weight(&mut self, weight: u8) -> &mut Self {
+        self.weight = Some(weight);
+
+        self
+    }
+
     fn get_marker(&self) -> &str {
         self.marker.as_deref().unwrap_or(Self::DEFAULT_MARKER)
+    }
+
+    fn get_weight(&self) -> u8 {
+        self.weight.unwrap_or(Self::DEFAULT_WEIGHT)
     }
 
     fn parse<'a>(&self, input: &'a str) -> Result<String, NomError<&'a str>> {
@@ -95,6 +108,14 @@ impl Parser for Text {
             .map_err(|e| self.new_error(e))
     }
 }
+
+impl Weight for Text {
+    fn weight(&self) -> u8 {
+        self.get_weight()
+    }
+}
+
+impl WeightedParser for Text {}
 
 impl fmt::Debug for Text {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
