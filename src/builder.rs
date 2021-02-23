@@ -202,3 +202,89 @@ impl Default for Config {
         Self { inner: cfg }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn config_default_is_valid() {
+        let _cfg = Config::default();
+    }
+
+    #[test]
+    fn builder_set_text() {
+        let b = Builder::new().with(|this| this.text());
+
+        assert!(b.text.is_some())
+    }
+
+    #[test]
+    fn builder_set_file() {
+        let b = Builder::new().with(|this| this.file());
+
+        assert!(b.file.is_some())
+    }
+
+    #[test]
+    fn builder_set_stdin() {
+        let b = Builder::new().with(|this| this.stdin());
+
+        assert!(b.stdin.is_some())
+    }
+
+    #[test]
+    fn sorted_by_weight_ascending() {
+        let cfg = Config::default();
+
+        let mut last = 0;
+        cfg.with_parsers(|list| {
+            for wp in list.iter().filter_map(|o| *o) {
+                let weight = wp.weight();
+
+                assert!(weight >= last);
+
+                last = weight;
+            }
+        })
+    }
+
+    #[test]
+    fn config_default_parse_stdin() {
+        let input = "-";
+        let cfg = Config::default();
+
+        let t = cfg.parse_str(input).expect("a successful parse");
+
+        match t {
+            InputType::Stdin => {}
+            bad => panic!("expected Stdin, got: {:?}", bad),
+        }
+    }
+
+    #[test]
+    fn config_default_parse_file() {
+        let input = "@some/relative/path";
+        let cfg = Config::default();
+
+        let t = cfg.parse_str(input).expect("a successful parse");
+
+        match t {
+            InputType::File(_) => {}
+            bad => panic!("expected File, got: {:?}", bad),
+        }
+    }
+
+    #[test]
+    fn config_default_parse_text() {
+        let input = "basic textual input";
+        let cfg = Config::default();
+
+        let t = cfg.parse_str(input).expect("a successful parse");
+
+        match t {
+            InputType::UTF8(_) => {}
+            bad => panic!("expected Text, got: {:?}", bad),
+        }
+    }
+}
