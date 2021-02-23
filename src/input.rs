@@ -3,25 +3,29 @@ use std::{convert::TryFrom, fmt, io, str::FromStr};
 use crate::{
     builder::{Builder, Config},
     error::{access::AccessError, input::InputError},
-    parsers::{InputType, Parser},
+    parsers::InputType,
 };
 
+/// Represents some kind of input source which can be read from.
 #[derive(Debug)]
 pub struct Input {
     kind: InputType,
 }
 
 impl Input {
+    /// This structure cannot be directly created, instead you may create and configure a builder
+    /// which can then be used to generate Input.
     pub fn builder() -> Builder {
         Builder::default()
     }
 
+    /// Attempt to locate an input source with the default configuration from the given input
     pub fn with_defaults(input: impl AsRef<str>) -> Result<Self, InputError> {
-        Config::default()
-            .parse_str(input.as_ref())
-            .map(|i| Self::from_input_type(i))
+        Config::default().parse(input.as_ref())
     }
 
+    /// Attempt to access the input source. Note that this function may block, depending on the
+    /// what underlying input source is.
     pub fn access(&self) -> Result<InputReader, AccessError> {
         Read::try_from(&self.kind).map(|r| InputReader::new(r))
     }
@@ -39,6 +43,7 @@ impl FromStr for Input {
     }
 }
 
+/// An opaque handle that implements std::io::Read
 #[derive(Debug)]
 pub struct InputReader {
     input: Read,
