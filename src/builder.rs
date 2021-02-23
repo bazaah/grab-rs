@@ -6,86 +6,6 @@ use crate::{
 
 use std::{ffi::OsStr, fmt};
 
-#[derive(Debug, Clone, Default)]
-pub struct Builder {
-    stdin: Option<Stdin>,
-    file: Option<File>,
-    text: Option<Text>,
-}
-
-impl Builder {
-    /// Create a new, empty config builder
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Convenience function for applying configuration options
-    pub fn with<F>(self, f: F) -> Self
-    where
-        F: FnMut(&mut Self) -> &mut Self,
-    {
-        let mut this = self;
-        let mut actions = f;
-
-        actions(&mut this);
-
-        this
-    }
-
-    /// Attempt to create a Config from the given parser,
-    /// if the current configuration is valid
-    pub fn build(self) -> Result<Config, Self> {
-        if self.is_valid() {
-            return Ok(Config { inner: self });
-        }
-
-        Err(self)
-    }
-
-    /// Enable text parsing, with the default parser
-    pub fn text(&mut self) -> &mut Self {
-        self.with_text(Text::new())
-    }
-
-    /// Enable text parsing, with the given parser
-    pub fn with_text(&mut self, t: Text) -> &mut Self {
-        self.text = Some(t);
-
-        self
-    }
-
-    /// Enable stdin parsing with the default parser
-    pub fn stdin(&mut self) -> &mut Self {
-        self.with_stdin(Stdin::new())
-    }
-
-    /// Enable stdin parsing, using the given parser
-    pub fn with_stdin(&mut self, s: Stdin) -> &mut Self {
-        self.stdin = Some(s);
-
-        self
-    }
-
-    /// Enable file path parsing with the default parser
-    pub fn file(&mut self) -> &mut Self {
-        self.with_file(File::new())
-    }
-
-    /// Enable file path parsing, using the given parser
-    pub fn with_file(&mut self, f: File) -> &mut Self {
-        self.file = Some(f);
-
-        self
-    }
-
-    /// Checks if you can successfully convert into a Config
-    pub fn is_valid(&self) -> bool {
-        let b = self;
-
-        b.text.is_some() || b.stdin.is_some() || b.file.is_some()
-    }
-}
-
 #[derive(Clone)]
 pub struct Config {
     inner: Builder,
@@ -200,6 +120,91 @@ impl Default for Config {
         debug_assert!(cfg.is_valid());
 
         Self { inner: cfg }
+    }
+}
+
+/// A [Config] builder, you can use this struct to customize which parsers are available to be called
+/// when attempting to parse input.
+///
+/// If you just want the default configuration, use [Config::default] and skip this struct
+/// completely.
+#[derive(Debug, Clone, Default)]
+pub struct Builder {
+    stdin: Option<Stdin>,
+    file: Option<File>,
+    text: Option<Text>,
+}
+
+impl Builder {
+    /// Create a new, empty config builder
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Convenience function for applying configuration options
+    pub fn with<F>(self, f: F) -> Self
+    where
+        F: FnMut(&mut Self) -> &mut Self,
+    {
+        let mut this = self;
+        let mut actions = f;
+
+        actions(&mut this);
+
+        this
+    }
+
+    /// Attempt to create a [Config] from the given parser,
+    /// if the current configuration is valid
+    pub fn build(self) -> Result<Config, Self> {
+        if self.is_valid() {
+            return Ok(Config { inner: self });
+        }
+
+        Err(self)
+    }
+
+    /// Enable [text](Text) parsing, with the default parser
+    pub fn text(&mut self) -> &mut Self {
+        self.with_text(Text::new())
+    }
+
+    /// Enable [text](Text) parsing, with the given parser
+    pub fn with_text(&mut self, t: Text) -> &mut Self {
+        self.text = Some(t);
+
+        self
+    }
+
+    /// Enable [stdin](Stdin) parsing with the default parser
+    pub fn stdin(&mut self) -> &mut Self {
+        self.with_stdin(Stdin::new())
+    }
+
+    /// Enable [stdin](Stdin) parsing, using the given parser
+    pub fn with_stdin(&mut self, s: Stdin) -> &mut Self {
+        self.stdin = Some(s);
+
+        self
+    }
+
+    /// Enable [file path](File) parsing with the default parser
+    pub fn file(&mut self) -> &mut Self {
+        self.with_file(File::new())
+    }
+
+    /// Enable [file path](File) parsing, using the given parser
+    pub fn with_file(&mut self, f: File) -> &mut Self {
+        self.file = Some(f);
+
+        self
+    }
+
+    /// Checks if you can successfully convert into a [Config]
+    pub fn is_valid(&self) -> bool {
+        let b = self;
+
+        b.text.is_some() || b.stdin.is_some() || b.file.is_some()
     }
 }
 
