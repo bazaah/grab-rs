@@ -1,3 +1,9 @@
+//! This module contains [Config] and its sister [Builder] which are used for converting input
+//! into a concrete [Input] kind which can be then be accessed and read from. The two main methods
+//! for this conversion are [Config::parse] and [Config::parse_os], which take as some hopefully
+//! parsable input, like say `@/some/file/path` for reading from a file or `-` for reading from
+//! [Stdin](std::io::Stdin).
+
 use crate::{
     error::input::InputError,
     input::Input,
@@ -6,16 +12,24 @@ use crate::{
 
 use std::{ffi::OsStr, fmt};
 
+/// Represents a set of parsers that will be called in ascending order according to their weight
+/// until the list is exhausted or a parser returns successfully.
+///
+/// Typically, you can construct one via a [Builder], however if you aren't interested in
+/// customizing your parser config, you can also use [Config::default].
 #[derive(Clone)]
 pub struct Config {
     inner: Builder,
 }
 
 impl Config {
+    /// Attempt to parse the input into a concrete handle which can be [accessed](Input::access)
     pub fn parse(&self, input: &str) -> Result<Input, InputError> {
         self.parse_str(input).map(|t| Input::from_input_type(t))
     }
 
+    /// Attempt to parse the given [OsStr] into a concrete handle which can be
+    /// [accessed](Input::access).
     pub fn parse_os(&self, input: &OsStr) -> Result<Input, InputError> {
         self.parse_os_str(input).map(|t| Input::from_input_type(t))
     }
@@ -244,6 +258,7 @@ mod tests {
 
         let mut last = 0;
         cfg.with_parsers(|list| {
+            // TODO: replace with list.is_sorted_by(|wp| wp.weight()) when method is stabilized
             for wp in list.iter().filter_map(|o| *o) {
                 let weight = wp.weight();
 
