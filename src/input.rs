@@ -15,6 +15,8 @@ pub struct Input {
 impl Input {
     /// This structure cannot be directly created, instead you may create and configure a builder
     /// which can then be used to generate Input.
+    ///
+    /// Alternatively, you can use [Config::with_defaults] to parse some input using the default [Config].
     pub fn builder() -> Builder {
         Builder::default()
     }
@@ -120,5 +122,39 @@ impl fmt::Debug for Read {
         };
 
         dbg.finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn input_from_default() {
+        let input = "@/some/file/path";
+        let res = Input::with_defaults(input);
+
+        assert!(res.is_ok())
+    }
+
+    #[test]
+    fn input_from_str() {
+        let input = "some text";
+        let res = Input::from_str(input);
+
+        assert!(res.is_ok())
+    }
+
+    #[test]
+    fn input_reader() {
+        use std::io::Read;
+
+        let input = "some random text";
+        let mut output = String::new();
+        let i = Input::with_defaults(input).unwrap();
+
+        i.access().unwrap().read_to_string(&mut output).unwrap();
+
+        assert_eq!(input, output.as_str())
     }
 }
