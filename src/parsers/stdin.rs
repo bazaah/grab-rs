@@ -92,13 +92,12 @@ impl Stdin {
     fn parse<'a>(&self, input: &'a str) -> Result<(), NomError<&'a str>> {
         let marker = self.get_marker();
 
-        let (_, success) = self
-            .parser
+        self.parser
             .map(|p| p(input, marker))
             .unwrap_or_else(|| Self::DEFAULT_PARSER(input, marker))
             .finish()?;
 
-        Ok(success)
+        Ok(())
     }
 
     fn new_error(&self, _p_error: NomError<&str>) -> InputError {
@@ -107,7 +106,7 @@ impl Stdin {
 }
 
 impl Parser for Stdin {
-    fn parse_str<'a>(&self, s: &'a str) -> Result<InputType, InputError> {
+    fn parse_str(&self, s: &str) -> Result<InputType, InputError> {
         self.parse(s)
             .map(|_| InputType::Stdin)
             .map_err(|e| self.new_error(e))

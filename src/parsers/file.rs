@@ -103,9 +103,9 @@ impl File {
 }
 
 impl Parser for File {
-    fn parse_str<'a>(&self, s: &'a str) -> Result<InputType, InputError> {
+    fn parse_str(&self, s: &str) -> Result<InputType, InputError> {
         self.parse(s)
-            .map(|fp| InputType::File(fp))
+            .map(InputType::File)
             .map_err(|e| self.new_error(e))
     }
 }

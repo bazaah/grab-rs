@@ -102,9 +102,9 @@ impl Text {
 }
 
 impl Parser for Text {
-    fn parse_str<'a>(&self, s: &'a str) -> Result<InputType, InputError> {
+    fn parse_str(&self, s: &str) -> Result<InputType, InputError> {
         self.parse(s)
-            .map(|s| InputType::UTF8(s))
+            .map(InputType::UTF8)
             .map_err(|e| self.new_error(e))
     }
 }
@@ -139,7 +139,7 @@ pub fn default_text_parser<'a, 'b>(
     marker: &'b str,
 ) -> nom::IResult<&'a str, String> {
     // If the marker is empty (the default) we just return everything
-    if marker == "" {
+    if marker.is_empty() {
         Ok(("", input.to_string()))
     } else {
         nom::context("TEXT", nom::tag(marker))(input).map(|(path, _)| ("", String::from(path)))

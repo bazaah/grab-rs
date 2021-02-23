@@ -14,7 +14,7 @@ pub(crate) trait Parser {
     fn parse_str(&self, input: &str) -> Result<InputType, InputError>;
 
     fn parse_os_str(&self, input: &OsStr) -> Result<InputType, InputError> {
-        let input = input.to_str().ok_or_else(|| EKind::REQUIRES_UTF8)?;
+        let input = input.to_str().ok_or(EKind::REQUIRES_UTF8)?;
 
         self.parse_str(input)
     }

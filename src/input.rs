@@ -27,7 +27,7 @@ impl Input {
     /// Attempt to access the input source. Note that this function may block, depending on the
     /// what underlying input source is.
     pub fn access(&self) -> Result<InputReader, AccessError> {
-        Read::try_from(&self.kind).map(|r| InputReader::new(r))
+        Read::try_from(&self.kind).map(InputReader::new)
     }
 
     pub(crate) fn from_input_type(i: InputType) -> Self {
@@ -90,7 +90,7 @@ impl TryFrom<&InputType> for Read {
         match kind {
             InputType::Stdin => Ok(Read::stdin()),
             InputType::File(ref f) => std::fs::File::open(f.path.as_path())
-                .map(|f| Read::file(f))
+                .map(Read::file)
                 .map_err(|e| AccessError::file_with_context(e, f.path.as_path())),
             InputType::UTF8(ref s) => Ok(Self::text(s)),
         }

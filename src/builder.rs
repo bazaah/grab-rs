@@ -25,13 +25,13 @@ pub struct Config {
 impl Config {
     /// Attempt to parse the input into a concrete handle which can be [accessed](Input::access)
     pub fn parse(&self, input: &str) -> Result<Input, InputError> {
-        self.parse_str(input).map(|t| Input::from_input_type(t))
+        self.parse_str(input).map(Input::from_input_type)
     }
 
     /// Attempt to parse the given [OsStr] into a concrete handle which can be
     /// [accessed](Input::access).
     pub fn parse_os(&self, input: &OsStr) -> Result<Input, InputError> {
-        self.parse_os_str(input).map(|t| Input::from_input_type(t))
+        self.parse_os_str(input).map(Input::from_input_type)
     }
 
     /// Generates a list of parsers from the available, sorts them by weight,
