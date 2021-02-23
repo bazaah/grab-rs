@@ -14,10 +14,12 @@ pub struct Builder {
 }
 
 impl Builder {
+    /// Create a new, empty config builder
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Convenience function for applying configuration options
     pub fn with<F>(self, f: F) -> Self
     where
         F: FnMut(&mut Self) -> &mut Self,
@@ -30,6 +32,8 @@ impl Builder {
         this
     }
 
+    /// Attempt to create a Config from the given parser,
+    /// if the current configuration is valid
     pub fn build(self) -> Result<Config, Self> {
         if self.is_valid() {
             return Ok(Config { inner: self });
@@ -38,36 +42,43 @@ impl Builder {
         Err(self)
     }
 
+    /// Enable text parsing, with the default parser
     pub fn text(&mut self) -> &mut Self {
         self.with_text(Text::new())
     }
 
+    /// Enable text parsing, with the given parser
     pub fn with_text(&mut self, t: Text) -> &mut Self {
         self.text = Some(t);
 
         self
     }
 
+    /// Enable stdin parsing with the default parser
     pub fn stdin(&mut self) -> &mut Self {
         self.with_stdin(Stdin::new())
     }
 
+    /// Enable stdin parsing, using the given parser
     pub fn with_stdin(&mut self, s: Stdin) -> &mut Self {
         self.stdin = Some(s);
 
         self
     }
 
+    /// Enable file path parsing with the default parser
     pub fn file(&mut self) -> &mut Self {
         self.with_file(File::new())
     }
 
+    /// Enable file path parsing, using the given parser
     pub fn with_file(&mut self, f: File) -> &mut Self {
         self.file = Some(f);
 
         self
     }
 
+    /// Checks if you can successfully convert into a Config
     pub fn is_valid(&self) -> bool {
         let b = self;
 
