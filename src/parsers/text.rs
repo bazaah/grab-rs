@@ -7,6 +7,9 @@ use std::fmt;
 
 pub type TextParser = for<'a, 'b> fn(&'a str, &'b str) -> nom::IResult<&'a str, String>;
 
+/// Construct for treating the given input to parse as a readable input source. By default, this
+/// parser will consume any valid utf8 strings and return it as an input source. Consequently, this
+/// parser by default has the lowest possible priority so it will always be the last parser run.
 #[derive(Clone, Default)]
 pub struct Text {
     marker: Option<String>,
