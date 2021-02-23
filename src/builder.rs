@@ -1,7 +1,7 @@
 use crate::{
     error::input::InputError,
     input::Input,
-    parsers::{File, InputType, Parser, Stdin, Text, Weight, WeightedParser as WP},
+    parsers::{File, InputType, Parser, Stdin, Text, WeightedParser as WP},
 };
 
 use std::{ffi::OsStr, fmt};
@@ -89,11 +89,15 @@ impl Config {
         self.parse_os_str(input).map(|t| Input::from_input_type(t))
     }
 
-    fn internal_parse<F>(&self, mut f: F) -> Result<InputType, InputError>
+    /// Generates a list of parsers from the available, sorts them by weight,
+    /// then applies the given closure to the sorted list
+    fn with_parsers<F, R>(&self, f: F) -> R
     where
-        F: FnMut(&dyn WP) -> Result<InputType, InputError>,
+        F: FnMut(&[Option<&dyn WP>]) -> R,
     {
         let b = &self.inner;
+        let mut callback = f;
+
         let mut list = [
             b.file.as_ref().map(|p| p as &dyn WP),
             b.stdin.as_ref().map(|p| p as &dyn WP),
@@ -104,9 +108,22 @@ impl Config {
         // priority.
         list.sort_by_key(|opt| opt.map(|p| p.weight()));
 
+        callback(&list)
+    }
+
+    /// Iterates over the given list of parsers, trying the given closure on each
+    /// and returning the first success.
+    ///
+    /// Notably, this function _does not_ provide the input on which a parser
+    /// operates, this should be pulled in by the closure.
+    fn apply<'a, F, I>(&self, parsers: I, mut f: F) -> Result<InputType, InputError>
+    where
+        F: FnMut(&dyn WP) -> Result<InputType, InputError>,
+        I: IntoIterator<Item = &'a dyn WP>,
+    {
         let mut error: Option<InputError> = None;
 
-        for parser in list.iter().filter_map(|o| *o) {
+        for parser in parsers {
             match f(parser) {
                 Ok(success) => return Ok(success),
                 Err(e) => match error {
@@ -124,15 +141,24 @@ impl Config {
 
 impl Parser for Config {
     fn parse_str(&self, input: &str) -> Result<InputType, InputError> {
-        self.internal_parse(|p| p.parse_str(input))
+        self.with_parsers(|parsers| {
+            let iter = parsers.iter().filter_map(|o| *o);
+            self.apply(iter, |p| p.parse_str(input))
+        })
     }
 
     fn parse_os_str(&self, input: &OsStr) -> Result<InputType, InputError> {
-        self.internal_parse(|p| p.parse_os_str(input))
+        self.with_parsers(|parsers| {
+            let iter = parsers.iter().filter_map(|o| *o);
+            self.apply(iter, |p| p.parse_os_str(input))
+        })
     }
 
     fn parse_bytes(&self, input: &[u8]) -> Result<InputType, InputError> {
-        self.internal_parse(|p| p.parse_bytes(input))
+        self.with_parsers(|parsers| {
+            let iter = parsers.iter().filter_map(|o| *o);
+            self.apply(iter, |p| p.parse_bytes(input))
+        })
     }
 }
 
