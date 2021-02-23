@@ -66,6 +66,7 @@ impl Inner {
 }
 
 impl Inner {
+    #[allow(dead_code)]
     fn file(err: io::Error) -> Self {
         Self::File { context: None, err }
     }
