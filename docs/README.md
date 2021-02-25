@@ -51,12 +51,6 @@ struct HelloCLI {
    name: Input
 }
 
-impl HelloCLI {
-   fn from_args() -> Self {
-       Self::from_iter(vec!["hello", "John"])
-   }
-}
-
 fn main() -> Result<()> {
    // Parse our argument(s)
    let args = HelloCLI::from_args();
