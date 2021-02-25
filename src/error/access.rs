@@ -1,18 +1,26 @@
+//! Contains the error returned attempting to [access][crate::Input::access] an
+//! [Input][crate::Input].
+
 use std::{
     fmt, io,
     path::{Path, PathBuf},
 };
 
+/// A error representing some error condition that occurred when attempting to access the source of
+/// some input. This type is fairly opaque, but does expose a [kind][AccessError::kind] method that
+/// returns an enum which best describes the underlying source.
 #[derive(Debug)]
 pub struct AccessError {
     inner: Inner,
 }
 
 impl AccessError {
+    /// Returns a enum describes the type of error encountered
     pub fn kind(&self) -> Kind {
         self.inner.kind()
     }
 
+    /// Create a new error that originates from an attempt to access a file
     pub fn file_with_context(err: io::Error, context: impl AsRef<Path>) -> Self {
         Self {
             inner: Inner::file_cxt(err, context.as_ref().to_owned()),
@@ -34,8 +42,10 @@ impl PartialEq for AccessError {
 
 impl std::error::Error for AccessError {}
 
+/// A cheap descriptor of the kind of access error encountered
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Kind {
+    /// The underlying error originates from attempting to access a file
     File,
 }
 
@@ -49,6 +59,7 @@ impl fmt::Display for Kind {
     }
 }
 
+/// The actual representation of an AccessError
 #[derive(Debug)]
 enum Inner {
     File {

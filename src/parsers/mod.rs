@@ -1,3 +1,15 @@
+//! This module contains the individual parsers that the high level API uses for actually
+//! processing raw input into a well understood [Input][crate::Input]. Under the hood, each of the
+//! parsers use [nom](https://github.com/Geal/nom) combinators for driving the parsing. See the
+//! exposed parsers themselves for details on how each works.
+//!
+//! The module does also provide access to the underlying nom library, though it is hidden to avoid
+//! cluttering up this crates documentation. You can use it via:
+//!
+//! ```
+//! use grab::parsers::reexport::nom;
+//! ```
+
 mod file;
 mod stdin;
 mod text;
@@ -48,9 +60,9 @@ pub(crate) enum InputType {
 
 // Reexport nom parsers in a manner that doesn't
 // make me want to shoot myself.
-pub mod nom {
+mod nom {
     pub type IResult<I, O, E = NomError<I>> = Result<(I, O), nom::Err<E>>;
-    pub type NomError<I> = nom::error::VerboseError<I>;
+    pub type NomError<I> = nom::error::Error<I>;
 
     pub use nom::Finish;
 
@@ -61,4 +73,12 @@ pub mod nom {
     pub use nom::branch::alt;
 
     pub use nom::error::{context, ParseError};
+}
+
+/// This is hidden by default to avoid cluttering this crate's docs. If you want to create custom
+/// parser functions however, you can use this to ensure your version of nom's is the same as this
+/// crates.
+#[doc(hidden)]
+pub mod reexport {
+    pub use nom;
 }

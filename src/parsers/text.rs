@@ -18,8 +18,12 @@ pub struct Text {
 }
 
 impl Text {
+    /// The default weighting for [Text]. Note that is the lowest weight possible, as by default
+    /// this parser will never fail for UTF8 input.
     pub const DEFAULT_WEIGHT: u8 = 255;
+    /// Default marker for [Text]
     pub const DEFAULT_MARKER: &'static str = "";
+    /// Default parser implementation for [Text]
     pub const DEFAULT_PARSER: TextParser = default_text_parser;
 
     /// Instantiate a new Text parser with sensible defaults

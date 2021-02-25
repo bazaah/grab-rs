@@ -15,8 +15,11 @@ pub struct File {
 }
 
 impl File {
+    /// The default weighting for [File]
     pub const DEFAULT_WEIGHT: u8 = 130;
+    /// Default marker for [File]
     pub const DEFAULT_MARKER: &'static str = "@";
+    /// Default parser implementation for [File]
     pub const DEFAULT_PARSER: FileParser = default_file_parser;
 
     /// Instantiate a new File parser with sensible defaults

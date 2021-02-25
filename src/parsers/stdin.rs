@@ -20,8 +20,11 @@ pub struct Stdin {
 }
 
 impl Stdin {
+    /// The default weighting for [Stdin]
     pub const DEFAULT_WEIGHT: u8 = 140;
+    /// Default marker for [Stdin]
     pub const DEFAULT_MARKER: &'static str = "-";
+    /// Default parser implementation for [Stdin]
     pub const DEFAULT_PARSER: StdinParser = default_stdin_parser;
 
     /// Instantiate a new Stdin parser with sensible defaults
