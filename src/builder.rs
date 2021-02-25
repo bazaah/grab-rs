@@ -168,9 +168,27 @@ impl Builder {
         this
     }
 
+    /// Consume this builder returning a [Config] that can be
+    /// used for parsing.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there are no parsers set
+    pub fn build(self) -> Config {
+        assert!(
+            self.is_valid(),
+            "A grab::Builder must contain at least one parser"
+        );
+
+        Config { inner: self }
+    }
+
     /// Attempt to create a [Config] from the given parser,
-    /// if the current configuration is valid
-    pub fn build(self) -> Result<Config, Self> {
+    /// if the current configuration is valid, returning the
+    /// builder otherwise.
+    ///
+    /// This is the safe variant of [build][Builder::build]
+    pub fn try_build(self) -> Result<Config, Self> {
         if self.is_valid() {
             return Ok(Config { inner: self });
         }
