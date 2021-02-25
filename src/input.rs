@@ -55,6 +55,17 @@ impl InputReader {
     fn new(input: Read) -> Self {
         Self { input }
     }
+
+    /// Convenience function for reading all the available input into a String. This function
+    /// internally contains similar semantics to [read_to_string][io::Read::read_to_string],
+    /// notably it will not consume the buffer in the case of a UTF8 error.
+    pub fn read_to_string(&mut self) -> Result<String, io::Error> {
+        let mut buf = String::new();
+
+        io::Read::read_to_string(&mut self.input, &mut buf)?;
+
+        Ok(buf)
+    }
 }
 
 impl io::Read for InputReader {
@@ -147,13 +158,10 @@ mod tests {
 
     #[test]
     fn input_reader() {
-        use std::io::Read;
-
         let input = "some random text";
-        let mut output = String::new();
         let i = Input::with_defaults(input).unwrap();
 
-        i.access().unwrap().read_to_string(&mut output).unwrap();
+        let output = i.access().unwrap().read_to_string().unwrap();
 
         assert_eq!(input, output.as_str())
     }
