@@ -118,8 +118,6 @@ impl Weight for Text {
     }
 }
 
-impl WeightedParser for Text {}
-
 impl fmt::Debug for Text {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Text")

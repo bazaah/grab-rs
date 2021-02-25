@@ -10,6 +10,8 @@ use self::nom::NomError;
 
 pub use {file::File, stdin::Stdin, text::Text};
 
+/// Private trait that describes the conversion of some input into a reference to some kind of
+/// input type.
 pub(crate) trait Parser {
     fn parse_str(&self, input: &str) -> Result<InputType, InputError>;
 
@@ -26,11 +28,16 @@ pub(crate) trait Parser {
     }
 }
 
+/// Describes the expected priority (or weight) of a parser. Used for deterministically sorting a
+/// series of parsers, allowing higher priority parsers an attempt before lower priority ones.
 pub(crate) trait Weight {
     fn weight(&self) -> u8;
 }
 
+/// Glue trait for creating trait objects with both Parser and Weight methods
 pub(crate) trait WeightedParser: Parser + Weight {}
+
+impl<T> WeightedParser for T where T: Parser + Weight {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum InputType {

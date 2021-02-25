@@ -119,8 +119,6 @@ impl Weight for Stdin {
     }
 }
 
-impl WeightedParser for Stdin {}
-
 impl fmt::Debug for Stdin {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Stdin")

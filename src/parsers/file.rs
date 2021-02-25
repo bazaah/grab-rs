@@ -116,8 +116,6 @@ impl Weight for File {
     }
 }
 
-impl WeightedParser for File {}
-
 impl fmt::Debug for File {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("File")
