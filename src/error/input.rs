@@ -76,12 +76,12 @@ mod kind {
     bitflags! {
         pub struct EKind: u32 {
             // Parser Variant Errors
-            const TEXT = 0b00000000_00000000_00000000_00000001;
-            const STDIN = 0b00000000_00000000_00000000_00000010;
-            const FILE = 0b00000000_00000000_00000000_00000100;
+            const TEXT = 0b000_0000_0000_0000_0000_0000_0000_0001;
+            const STDIN = 0b000_0000_0000_0000_0000_0000_0000_0010;
+            const FILE = 0b000_0000_0000_0000_0000_0000_0000_0100;
 
             // General Errors
-            const REQUIRES_UTF8 = 0b00000000_00000001_00000000_0000000;
+            const REQUIRES_UTF8 = 0b000_0000_0000_0001_0000_0000_0000_0000;
         }
     }
 }
