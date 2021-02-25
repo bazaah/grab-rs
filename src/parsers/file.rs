@@ -1,6 +1,6 @@
 use super::{
     nom::{self, Finish},
-    EKind, InputError, InputType, NomError, Parser, Weight, WeightedParser,
+    EKind, InputError, InputType, NomError, Parser, Weight,
 };
 use std::{fmt, path::PathBuf};
 
