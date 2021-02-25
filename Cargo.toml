@@ -9,3 +9,6 @@ edition = "2018"
 [dependencies]
 nom = "6.0"
 bitflags = "1.2"
+
+[dev-dependencies]
+structopt = "0.3"
