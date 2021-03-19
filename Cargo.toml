@@ -7,6 +7,7 @@ edition = "2018"
 description = "Easily grab user input to your CLI"
 repository = "https://github.com/bazaah/grab-rs"
 license = "Apache-2.0"
+readme = "docs/README.md"
 
 keywords = ["CLI", "input", "parse"]
 categories = ["command-line-interface"]
