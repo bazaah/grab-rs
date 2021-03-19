@@ -1,6 +1,6 @@
 [![Crates.io](https://img.shields.io/crates/v/grab.svg)](https://crates.io/crates/grab)
 [![Docs](https://img.shields.io/docsrs/grab.svg)](https://docs.rs/grab/latest/grab)
-[![License]((https://img.shields.io/crates/l/grab.svg)](https://choosealicense.com/licenses/apache-2.0)
+[![License](https://img.shields.io/crates/l/grab.svg)](https://choosealicense.com/licenses/apache-2.0)
 
 # grab-rs
 
